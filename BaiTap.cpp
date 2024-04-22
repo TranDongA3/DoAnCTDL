@@ -1,5 +1,5 @@
 ﻿#include<bits/stdc++.h>
-#include <set>
+#include <unordered_set>
 
 using namespace std;
 
@@ -17,66 +17,85 @@ class FileReader {
 public:
     vector<SinhVien> readFile(const string& filename) {
         vector<SinhVien> data;
+        bool kiemTra = true;
+        unordered_set<string> uniqueID; // Sử dụng để kiểm tra mã sinh viên trùng lặp
+        unordered_set<string> equalID;
+
         ifstream file(filename);
         if (!file.is_open()) {
             cerr << "Không mở được file" << endl;
             return data;
         }
-
-        string line;
-        getline(file, line); // Bỏ qua dòng tiêu đề
-
-        while (getline(file, line)) {
-            stringstream ss(line);
-            SinhVien sv;
-
-            getline(ss, sv.soThuTu, ',');
-            getline(ss, sv.maSinhVien, ',');
-            getline(ss, sv.hoLot, ',');
-            getline(ss, sv.ten, ',');
-            getline(ss, sv.maLop, ',');
-            string diem_str;
-            getline(ss, diem_str, ',');
-            sv.diem = stof(diem_str);
-
-            data.push_back(sv);
-        }
-
-        file.close();
-        set<string> uniqueID;
-        for (auto& sv : data) {
-            while (uniqueID.count(sv.maSinhVien) > 0) {
-                cerr << "Lỗi: Mã sinh viên trùng lặp: " << sv.maSinhVien << endl;
-                cout << "Vui lòng nhập lại mã sinh viên khác đối với sinh viên sau" << endl;
-                sv.hienThi();
-                cout << endl;
-                cin >> sv.maSinhVien;
-            }
-            uniqueID.insert(sv.maSinhVien);
-        }
-        ofstream fileout("DSSV.csv");
-        if (!fileout.is_open()) {
-            cerr << "Không mở file được " << endl;
-            return data;
-        }
         else {
-            fileout << "Stt,Mã SV,Họ lót,Tên,Mã lớp,Điểm\n"; // Ghi lại dòng tiêu đề
+            string line;
+            getline(file, line); // Bỏ qua dòng tiêu đề
 
-            for (const auto& sv : data) {
-                fileout << sv.soThuTu << ",";
-                fileout << sv.maSinhVien << ",";
-                fileout << sv.hoLot << ",";
-                fileout << sv.ten << ",";
-                fileout << sv.maLop << ",";
-                fileout << sv.diem << "\n";
+            while (getline(file, line)) {
+                stringstream ss(line);
+                SinhVien sv;
+
+                getline(ss, sv.soThuTu, ',');
+                getline(ss, sv.maSinhVien, ',');
+                getline(ss, sv.hoLot, ',');
+                getline(ss, sv.ten, ',');
+                getline(ss, sv.maLop, ',');
+                string diem_str;
+                getline(ss, diem_str, ',');
+                sv.diem = stof(diem_str);
+
+
+                if (uniqueID.count(sv.maSinhVien) > 0) {
+                    kiemTra = false;
+                    equalID.insert(sv.maSinhVien);
+
+                }
+                uniqueID.insert(sv.maSinhVien);
+
+                
+
+                data.push_back(sv);
+            }file.close();
+        }
+        if (kiemTra == false) {
+            cout << setw(25) << "ERROR" << endl;
+            cout << "Xin vui lòng nhập lại những sinh viên có mã bị trùng ! " << endl;
+            for (auto& x : equalID) {
+                cout <<setw(25)<< "Mã trùng " << x << endl;
+                for (auto& y : data) {
+                    if (x == y.maSinhVien) {
+                        y.hienThi();
+                        cout << "Nhập lại mã sinh viên : ";
+                        cin >> y.maSinhVien;
+                    }
+                }
+            }
+            ofstream fileout("DSSV.csv");
+            if (!fileout.is_open()) {
+                cerr << "Không mở file được " << endl;
+                return data;
+            }
+            else {
+                fileout << "Stt,Mã SV,Họ lót,Tên,Mã lớp,Điểm\n";
+
+                for (const auto& sv : data) {
+                    fileout << sv.soThuTu << ",";
+                    fileout << sv.maSinhVien << ",";
+                    fileout << sv.hoLot << ",";
+                    fileout << sv.ten << ",";
+                    fileout << sv.maLop << ",";
+                    fileout << sv.diem << "\n";
+
+                }
+                fileout.close();
+
             }
 
-            fileout.close();
-        }
 
-        return data;
+           
+        } return data;
     }
 };
+
 
 class QuanLiDuLieu {
 public:
@@ -275,22 +294,22 @@ int main() {
     QuanLiDuLieuMang quanLiDuLieuMang;
     
     quanLiDuLieuMang.docFile();
-    quanLiDuLieuMang.hienThi();
+    
 
     QuanLiDuLieuDSLKDon quanLiDuLieuDSLKDon;
     
     quanLiDuLieuDSLKDon.docFile();
-    quanLiDuLieuDSLKDon.hienThi();
+    
 
     QuanLiDuLieuDSLKVong quanLiDuLieuDSLKVong;
     
     quanLiDuLieuDSLKVong.docFile();
-    quanLiDuLieuDSLKVong.hienThi();
+    
 
     QuanLiDuLieuDSLKKep quanLiDuLieuDSLKKep;
     
     quanLiDuLieuDSLKKep.docFile();
-    quanLiDuLieuDSLKKep.hienThi();
+    
 
     return 0;
 }
