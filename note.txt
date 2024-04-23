@@ -1,0 +1,3 @@
+Các vấn đề đang gặp:
+-lỗi ở tìm kiếm tên "đông, đức , đ..." chỉ lỗi ở tên này nhưng mấy tên khác nó không lỗi
+-lỗi ở phần xuất đảo ngược thì nó bị lỗi font chữ
