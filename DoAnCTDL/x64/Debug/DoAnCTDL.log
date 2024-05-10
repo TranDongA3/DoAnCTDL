@@ -1,0 +1,6 @@
+﻿  BaiTap.cpp
+C:\Users\tranp\source\repos\DoAnCTDL\BaiTap.cpp(348,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tranp\source\repos\DoAnCTDL\BaiTap.cpp(658,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tranp\source\repos\DoAnCTDL\BaiTap.cpp(1005,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\tranp\source\repos\DoAnCTDL\BaiTap.cpp(1366,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  DoAnCTDL.vcxproj -> C:\Users\tranp\source\repos\DoAnCTDL\x64\Debug\DoAnCTDL.exe
