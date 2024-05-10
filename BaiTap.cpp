@@ -6,7 +6,6 @@
 #define RED     "\033[31m"// đặt màu đỏ
 #define BOLD    "\033[1m"// đặt cho chữ in đậm
 std::chrono::high_resolution_clock::time_point startTime;
-
 void startTimer() {
     startTime = std::chrono::high_resolution_clock::now(); //set định nghĩa về thời gian 
 }
@@ -19,7 +18,29 @@ void endTimer() {
 
 using namespace std;
 string daoNguocChuoi(const string& str) {
-    return string(str.rbegin(), str.rend());
+    if (str.empty()) return "";
+
+    string hoTenDaoNguoc;
+    stack<string> hoTen;
+
+    stringstream ss(str);
+
+    string word;
+    while (ss >> word) {
+        word = string(word.rbegin(), word.rend());
+        hoTen.push(word);
+    }
+
+
+    while (!hoTen.empty()) {
+        hoTenDaoNguoc += hoTen.top() + " ";
+        hoTen.pop();
+    }
+
+    // Loại bỏ dấu cách thừa ở cuối chuỗi
+    hoTenDaoNguoc.pop_back();
+
+    return hoTenDaoNguoc;
 }
 
 string chuanHoa(string s) {
@@ -32,13 +53,14 @@ string chuanHoa(string s) {
 
 
 
+
 struct SinhVien {
     string soThuTu, maSinhVien, hoLot, ten, maLop;
-    float diem;
+    string diem;
     void hienThi() {
-        cout << BOLD<<RED<<"Sinh viên : " << hoLot << " " << ten <<RESET<< endl;
-        cout << BOLD << RED << "Số thứ tự : " << soThuTu <<RESET<< endl;
-        cout << BOLD << RED << "Có mã lớp : " << maLop <<RESET<< endl;
+        cout << BOLD << RED << "Sinh viên : " << hoLot << " " << ten << RESET << endl;
+        cout << BOLD << RED << "Số thứ tự : " << soThuTu << RESET << endl;
+        cout << BOLD << RED << "Có mã lớp : " << maLop << RESET << endl;
         cout << BOLD << RED << "Điểm : " << diem << RESET << endl;
     }
 };
@@ -58,7 +80,7 @@ public:
         }
         else {
             string line;
-            getline(file, line); // Bỏ qua dòng tiêu đề
+            getline(file, line); // bỏ qua cái tiêu đề stt này nọ 
 
             while (getline(file, line)) {
                 stringstream ss(line);
@@ -69,11 +91,7 @@ public:
                 getline(ss, sv.hoLot, ',');
                 getline(ss, sv.ten, ',');
                 getline(ss, sv.maLop, ',');
-                string diem_str;
-                getline(ss, diem_str, ',');
-                sv.diem = stof(diem_str);
-
-
+                getline(ss, sv.diem, ',');
                 if (uniqueID.count(sv.maSinhVien) > 0) {
                     kiemTra = false;
                     equalID.insert(sv.maSinhVien);
@@ -81,7 +99,7 @@ public:
                 }
                 uniqueID.insert(sv.maSinhVien);
 
-                
+
 
                 data.push_back(sv);
             }file.close();
@@ -90,16 +108,17 @@ public:
             cout << setw(25) << "ERROR" << endl;
             cout << "Xin vui lòng nhập lại những sinh viên có mã bị trùng ! " << endl;
             for (auto& x : equalID) {
-                cout <<setw(25)<< "Mã trùng " << x << endl;
+                cout << setw(25) << "Mã trùng " << x << endl;
                 for (auto& y : data) {
                     if (x == y.maSinhVien) {
                         y.hienThi();
                         cout << "Nhập lại mã sinh viên : ";
                         cin >> y.maSinhVien;
+                        y.maSinhVien = chuanHoa(y.maSinhVien);
                     }
                 }
             }
-            ofstream fileout("DSSV.csv");
+            ofstream fileout(filename);
             if (!fileout.is_open()) {
                 cerr << "Không mở file được " << endl;
                 return data;
@@ -121,7 +140,7 @@ public:
             }
 
 
-           
+
         } return data;
     }
 };
@@ -136,7 +155,10 @@ public:
     virtual void timKiemTheoTen() = 0;
     virtual void timKiemTheoLop() = 0;
     virtual void timKiemTheoDiem() = 0;
-        
+    virtual void themSinhVien() = 0;
+    virtual void xoaSinhVien() = 0;
+    
+
     virtual ~QuanLiDuLieu() {}
 };
 
@@ -145,6 +167,7 @@ private:
     vector<SinhVien> mangSinhVien;
 
 public:
+
     void docFile() override {
         FileReader reader;
         mangSinhVien = reader.readFile("DSSV.csv");
@@ -178,15 +201,15 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << x.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                   
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot) << " " << daoNguocChuoi(x.ten) << RESET << endl;
+
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot + " " + x.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << x.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << x.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << x.diem << RESET << endl;
                     cout << endl;
                 }
                 else {
-                    
+
                     x.hienThi();
                     cout << endl;
                 }
@@ -211,14 +234,14 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << x.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot) << " " << daoNguocChuoi(x.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot + " " + x.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << x.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << x.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << x.diem << RESET << endl;
                     cout << endl;
                 }
                 else {
-                   
+
                     x.hienThi();
                     cout << endl;
                 }
@@ -240,14 +263,14 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << x.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot) << " " << daoNguocChuoi(x.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot + " " + x.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << x.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << x.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << x.diem << RESET << endl;
                     cout << endl;
                 }
                 else {
-                    
+
                     x.hienThi();
                     cout << endl;
                 }
@@ -269,14 +292,14 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << x.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot) << " " << daoNguocChuoi(x.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot + " " + x.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << x.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << x.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << x.diem << RESET << endl;
                     cout << endl;
                 }
                 else {
-                    
+
                     x.hienThi();
                     cout << endl;
                 }
@@ -294,25 +317,125 @@ public:
         cin >> c;
         startTimer();
         for (auto& x : mangSinhVien) {
-            if (x.diem == s) {
+            if (stof(x.diem) == s) {
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << x.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot) << " " << daoNguocChuoi(x.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(x.hoLot + " " + x.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << x.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << x.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << x.diem << RESET << endl;
                     cout << endl;
                 }
                 else {
-                    
+
                     x.hienThi();
                     cout << endl;
                 }
             }
         }endTimer();
     }
+    bool kiemTra(string& s) {
+        for (auto& x : mangSinhVien) {
+            if (chuanHoa(x.maSinhVien) == chuanHoa(s)) {
+                return false;
+            }
 
+        }return true;
+    }
+    void themSinhVien() override {
+
+        int i = mangSinhVien.size()+1;
+        SinhVien sv;
+        sv.soThuTu = to_string(i++);
+        cout << setw(25) << "NHẬP THÔNG TIN SINH VIÊN " << endl;
+        cout << " Nhập mã sinh viên :";
+        cin.ignore();
+        getline(cin, sv.maSinhVien);
+        cout << " Nhập họ lót của sinh viên :";
+        getline(cin, sv.hoLot);
+        cout << " Nhập tên của sinh viên :";
+        getline(cin, sv.ten);
+        cout << " Nhập mã lớp cho sinh viên :";
+        getline(cin, sv.maLop);
+        cout << " Nhập điểm cho sinh viên :";
+        getline(cin, sv.diem);
+        while (!kiemTra(sv.maSinhVien)) {
+            cout << "ERROR: Mã sinh viên bạn nhập vào bị trùng vui lòng nhập lại mã cho sinh viên này :";
+            getline(cin, sv.maSinhVien);
+
+        }sv.maSinhVien = chuanHoa(sv.maSinhVien);
+
+        mangSinhVien.push_back(sv);
+
+        // cập nhật 
+        ofstream fileout("DSSV.csv", ios::app);
+        if (!fileout.is_open()) {
+            cerr << "Không mở file được " << endl;
+            return;
+        }
+        else {
+
+            fileout << sv.soThuTu << ",";
+            fileout << sv.maSinhVien << ",";
+            fileout << sv.hoLot << ",";
+            fileout << sv.ten << ",";
+            fileout << sv.maLop << ",";
+            fileout << sv.diem << "\n";
+
+            fileout.close();
+        }
+
+
+
+    }
+    void xoaSinhVien()override {
+        string s;
+        int soThuTu; // để đánh dấu số thứ tự vừa xóa
+        cout << "Vui lòng nhập mã sinh viên bạn muốn xóa: ";
+        cin.ignore();
+        getline(cin, s);
+        bool kiemTra = true;
+        for (auto& x : mangSinhVien) {
+            if (chuanHoa(x.maSinhVien) == chuanHoa(s)) {
+                kiemTra = false;
+                soThuTu = stoi(x.soThuTu);
+                mangSinhVien.erase(mangSinhVien.begin() + (stoi(x.soThuTu)-1));
+                // sau khi xóa ta sẽ cập nhật số thứ tự sau đó
+                ofstream fileout("DSSV.csv");
+                if (!fileout.is_open()) {
+                    cerr << "Không mở được file";
+                    return;
+                }
+                else {
+                    fileout << "Stt,Mã SV,Họ lót,Tên,Mã lớp,Điểm\n";
+                    for (auto& x : mangSinhVien) {
+                        if (stoi(x.soThuTu) > soThuTu) {
+                            fileout << to_string(stoi(x.soThuTu) - 1)<<",";
+                            x.soThuTu = to_string(stoi(x.soThuTu) - 1);// cập nhật cả cho mảng sinh viên
+                        }
+                        else {
+                            fileout << x.soThuTu << ",";
+                        }
+                        fileout << x.maSinhVien << ",";
+                        fileout << x.hoLot << ",";
+                        fileout << x.ten << ",";
+                        fileout << x.maLop << ",";
+                        fileout << x.diem << "\n";
+
+                    }
+
+                    fileout.close();
+                }
+            }
+        }if (kiemTra == true) {
+            cout << "Không tồn tại sinh viên bạn muốn xóa trong danh sách ";
+        }
+        else {
+            cout << "Xóa sinh viên thành công";
+        }
+
+    }
 };
 
 class QuanLiDuLieuDSLKDon : public QuanLiDuLieu {
@@ -325,9 +448,11 @@ private:
     Node* head = nullptr;
 
 public:
+    FileReader reader;
+    vector<SinhVien> mangSinhVien;
     void docFile() override {
-        FileReader reader;
-        vector<SinhVien> mangSinhVien = reader.readFile("DSSV.csv");
+        mangSinhVien = reader.readFile("DSSV.csv");
+
 
         for (const auto& sv : mangSinhVien) {
             Node* newNode = new Node{ sv, nullptr };
@@ -372,7 +497,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -404,7 +529,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -440,7 +565,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -472,7 +597,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -500,11 +625,11 @@ public:
         startTimer();
         Node* temp = head;
         while (temp) {
-            if (temp->sv.diem == s) {
+            if (stof(temp->sv.diem) == s) {
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -520,6 +645,141 @@ public:
         }
         endTimer();
     }
+    bool kiemTra(string& s) {
+        for (auto& x : mangSinhVien) {
+            if (chuanHoa(x.maSinhVien) == chuanHoa(s)) {
+                return false;
+            }
+
+        }return true;
+    }
+    void themSinhVien() override {
+
+        int i = mangSinhVien.size()+1;
+        SinhVien sv;
+        sv.soThuTu = to_string(i++);
+
+        cout << setw(25) << "NHẬP THÔNG TIN SINH VIÊN " << endl;
+
+        cout << "Nhập mã sinh viên: ";
+        cin.ignore();
+        getline(cin, sv.maSinhVien);
+        cout << "Nhập họ lót của sinh viên: ";
+        getline(cin, sv.hoLot);
+        cout << "Nhập tên của sinh viên: ";
+        getline(cin, sv.ten);
+        cout << "Nhập mã lớp cho sinh viên: ";
+        getline(cin, sv.maLop);
+        cout << "Nhập điểm cho sinh viên: ";
+        cin >> sv.diem;
+        cin.ignore();
+        while (!kiemTra(sv.maSinhVien)) {
+            cout << "ERROR: Mã bạn nhập vào đã bị trùng vui lòng nhập lại :";
+            getline(cin, sv.maSinhVien);
+        }sv.maSinhVien = chuanHoa(sv.maSinhVien);
+        mangSinhVien.push_back(sv);
+
+        // Thêm sinh viên vào DSLKDon
+        Node* newNode = new Node{ sv, nullptr };
+        if (!head)
+            head = newNode;
+        else {
+            Node* temp = head;
+            while (temp->next)
+                temp = temp->next;
+            temp->next = newNode;
+        }
+
+        // Cập nhật vào file
+        ofstream fileout("DSSV.csv", ios::app);
+        if (!fileout.is_open()) {
+            cerr << "Không mở file được " << endl;
+            return;
+        }
+        else {
+            fileout << sv.soThuTu << ",";
+            fileout << sv.maSinhVien << ",";
+            fileout << sv.hoLot << ",";
+            fileout << sv.ten << ",";
+            fileout << sv.maLop << ",";
+            fileout << sv.diem << "\n";
+            fileout.close();
+        }
+    }
+    void xoaSinhVien() override {
+        string s;
+        cout << "Vui lòng nhập mã sinh viên bạn muốn xóa: ";
+        cin.ignore();
+        getline(cin, s);
+
+        Node* current = head;
+        Node* previous = nullptr;
+        bool kiemTra = false;
+        int soThuTu;
+        if (current == nullptr) {
+            cout << "Danh sách rỗng!";
+        }
+        while (current != nullptr) {
+            
+            if (chuanHoa(current->sv.maSinhVien) == chuanHoa(s)) {
+                kiemTra = true;
+                soThuTu = stoi(current->sv.soThuTu);
+                if (previous == nullptr) { // Nếu nút cần xóa là nút đầu tiên
+                    head = current->next;
+                    delete current;
+                    current = head;
+                }
+                else {
+                    previous->next = current->next;
+                    delete current;
+                    current = previous->next;
+                }
+
+                
+                ofstream fileout("DSSV.csv");
+                if (!fileout.is_open()) {
+                    cerr << "Không mở được file";
+                    return;
+                }
+                else {
+                    fileout << "Stt,Mã SV,Họ lót,Tên,Mã lớp,Điểm\n";
+                    Node* temp = head;
+                    
+                    while (temp != nullptr) {
+                        if (stoi(temp->sv.soThuTu) > soThuTu) {
+                            fileout << to_string(stoi(temp->sv.soThuTu) - 1) << ",";
+                            temp->sv.soThuTu = to_string(stoi(temp->sv.soThuTu) - 1);
+                            
+                        }
+                        else {
+                            fileout << temp->sv.soThuTu<<",";
+                        }
+                        fileout << temp->sv.maSinhVien << ",";
+                        fileout << temp->sv.hoLot << ",";
+                        fileout << temp->sv.ten << ",";
+                        fileout << temp->sv.maLop << ",";
+                        fileout << temp->sv.diem << ",";
+                        fileout << "\n";
+                        temp = temp->next;
+                    }
+                    fileout.close();
+                }
+                break;
+            }
+            else {
+                previous = current;
+                current = current->next;
+            }
+        }
+
+        if (!kiemTra) {
+            cout << "Không tồn tại sinh viên bạn muốn xóa trong danh sách" << endl;
+        }
+        else {
+            cout << "Xóa sinh viên thành công";
+        }
+    }
+
 
 
 
@@ -531,6 +791,7 @@ public:
             temp = next;
         }
     }
+
 };
 
 class QuanLiDuLieuDSLKVong : public QuanLiDuLieu {
@@ -543,9 +804,10 @@ private:
     Node* head = nullptr;
 
 public:
+    FileReader reader;
+    vector<SinhVien> mangSinhVien;
     void docFile() override {
-        FileReader reader;
-        vector<SinhVien> mangSinhVien = reader.readFile("DSSV.csv");
+        mangSinhVien = reader.readFile("DSSV.csv");
 
         for (const auto& sv : mangSinhVien) {
             Node* newNode = new Node{ sv, nullptr };
@@ -592,7 +854,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -626,7 +888,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -656,7 +918,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -686,7 +948,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -712,11 +974,11 @@ public:
         startTimer();
         Node* temp = head->next;
         do {
-            if (temp->sv.diem == s) {
+            if (stof(temp->sv.diem) == s) {
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -730,6 +992,152 @@ public:
         } while (temp != head->next);
         endTimer();
     }
+    bool kiemTra(string& s) {
+        for (auto& x : mangSinhVien) {
+            if (chuanHoa(x.maSinhVien) == chuanHoa(s)) {
+                return false;
+            }
+
+        }return true;
+    }
+    void themSinhVien() override {
+
+        int i = mangSinhVien.size()+1;
+        SinhVien sv;
+        sv.soThuTu = to_string(i++);
+
+        cout << setw(25) << "NHẬP THÔNG TIN SINH VIÊN " << endl;
+
+        cout << "Nhập mã sinh viên: ";
+        cin.ignore();
+        getline(cin, sv.maSinhVien);
+        cout << "Nhập họ lót của sinh viên: ";
+        getline(cin, sv.hoLot);
+        cout << "Nhập tên của sinh viên: ";
+        getline(cin, sv.ten);
+        cout << "Nhập mã lớp cho sinh viên: ";
+        getline(cin, sv.maLop);
+        cout << "Nhập điểm cho sinh viên: ";
+        cin >> sv.diem;
+        cin.ignore();
+        while (!kiemTra(sv.maSinhVien)) {
+            cout << "ERROR: Mã bạn nhập vào đã bị trùng vui lòng nhập lại mã cho sinh viên này: ";
+            getline(cin, sv.maSinhVien);
+        }sv.maSinhVien = chuanHoa(sv.maSinhVien);
+        Node* newNode = new Node{ sv, nullptr };
+        if (!head) {
+            head = newNode;
+            newNode->next = head;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next != head)
+                temp = temp->next;
+            temp->next = newNode;
+            newNode->next = head;
+        }
+        mangSinhVien.push_back(sv);
+
+
+        // Cập nhật vào file
+        ofstream fileout("DSSV.csv", ios::app);
+        if (!fileout.is_open()) {
+            cerr << "Không mở file được " << endl;
+            return;
+        }
+        else {
+            fileout << sv.soThuTu << ",";
+            fileout << sv.maSinhVien << ",";
+            fileout << sv.hoLot << ",";
+            fileout << sv.ten << ",";
+            fileout << sv.maLop << ",";
+            fileout << sv.diem << "\n";
+            fileout.close();
+        }
+    }
+    void xoaSinhVien() override {
+        string s;
+        cout << "Vui lòng nhập mã sinh viên bạn muốn xóa: ";
+        cin.ignore();
+        getline(cin, s);
+
+        if (head == nullptr) {
+            cout << "Danh sách rỗng!";
+            return;
+        }
+
+        Node* current = head->next;
+        Node* previous = head;
+
+        bool kiemTra = false;
+        int soThuTu = 0; // Khởi tạo số thứ tự để lưu lại vị trí của sinh viên cần xóa
+
+        do {
+            if (chuanHoa(current->sv.maSinhVien) == chuanHoa(s)) {
+                kiemTra = true;
+                soThuTu = stoi(current->sv.soThuTu);
+
+                // Nếu nút cần xóa là nút đầu tiên
+                if (current == head->next) {
+                    previous->next = current->next;
+
+                    // Nếu chỉ còn một nút trong danh sách
+                    if (head->next == head) {
+                        delete current;
+                        head = nullptr;
+                        break;
+                    }
+                    head->next = current->next;
+                    delete current;
+                }
+                else {
+                    // Nếu nút cần xóa không phải nút đầu tiên
+                    previous->next = current->next;
+                    delete current;
+                }
+                break;
+            }
+            previous = current;
+            current = current->next;
+        } while (current != head->next);
+
+        if (!kiemTra) {
+            cout << "Không tồn tại sinh viên bạn muốn xóa trong danh sách" << endl;
+            return;
+        }
+
+        // Cập nhật file
+        ofstream fileout("DSSV.csv");
+        if (!fileout.is_open()) {
+            cerr << "Không mở được file để cập nhật!" << endl;
+            return;
+        }
+
+        fileout << "Stt,Mã SV,Họ lót,Tên,Mã lớp,Điểm\n";
+        Node* temp = head->next;
+        do {
+            
+            if (stoi(temp->sv.soThuTu) > soThuTu) {
+                fileout << to_string(stoi(temp->sv.soThuTu) - 1) << ",";
+                temp->sv.soThuTu = to_string(stoi(temp->sv.soThuTu) - 1);
+            }
+            else {
+                fileout << temp->sv.soThuTu << ",";
+            }
+            fileout << temp->sv.maSinhVien << ",";
+            fileout << temp->sv.hoLot << ",";
+            fileout << temp->sv.ten << ",";
+            fileout << temp->sv.maLop << ",";
+            fileout << temp->sv.diem << "\n";
+            temp = temp->next;
+        } while (temp != head->next);
+
+        fileout.close();
+        cout << "Xóa sinh viên thành công!" << endl;
+    }
+
+
+
 
 
     ~QuanLiDuLieuDSLKVong() {
@@ -743,6 +1151,7 @@ public:
             delete head;
         }
     }
+
 };
 
 class QuanLiDuLieuDSLKKep : public QuanLiDuLieu {
@@ -754,11 +1163,13 @@ private:
     };
 
     Node* head = nullptr;
+    Node* tail = nullptr;
 
 public:
+    FileReader reader;
+    vector<SinhVien> mangSinhVien;
     void docFile() override {
-        FileReader reader;
-        vector<SinhVien> mangSinhVien = reader.readFile("DSSV.csv");
+        mangSinhVien = reader.readFile("DSSV.csv");
 
         for (const auto& sv : mangSinhVien) {
             Node* newNode = new Node{ sv, nullptr, nullptr };
@@ -803,7 +1214,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -837,7 +1248,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -867,7 +1278,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -897,7 +1308,7 @@ public:
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -923,11 +1334,11 @@ public:
         startTimer();
         Node* temp = head;
         while (temp) {
-            if (temp->sv.diem == s) {
+            if (stof(temp->sv.diem) == s) {
                 cout << endl;
                 cout << BOLD << RED << "Mã sinh viên : " << temp->sv.maSinhVien << RESET << endl;
                 if (c == 'y') {
-                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot) << " " << daoNguocChuoi(temp->sv.ten) << RESET << endl;
+                    cout << BOLD << RED << "Họ và tên sinh viên " << daoNguocChuoi(temp->sv.hoLot + " " + temp->sv.ten) << RESET << endl;
                     cout << BOLD << RED << "Số thứ tự của sinh viên: " << temp->sv.soThuTu << RESET << endl;
                     cout << BOLD << RED << "Mã lớp: " << temp->sv.maLop << RESET << endl;
                     cout << BOLD << RED << "Điểm: " << temp->sv.diem << RESET << endl;
@@ -941,6 +1352,79 @@ public:
         }
         endTimer();
     }
+    bool kiemTra(string& s) {
+        for (auto& x : mangSinhVien) {
+            if (chuanHoa(x.maSinhVien) == chuanHoa(s)) {
+                return false;
+            }
+
+        }return true;
+    }
+    
+    void themSinhVien() override {
+
+        int i = mangSinhVien.size()+1;
+        SinhVien sv;
+        sv.soThuTu = to_string(i++);
+
+        cout << setw(25) << "NHẬP THÔNG TIN SINH VIÊN " << endl;
+
+        cout << "Nhập mã sinh viên: ";
+        cin.ignore();
+        getline(cin, sv.maSinhVien);
+        cout << "Nhập họ lót của sinh viên: ";
+        getline(cin, sv.hoLot);
+        cout << "Nhập tên của sinh viên: ";
+        getline(cin, sv.ten);
+        cout << "Nhập mã lớp cho sinh viên: ";
+        getline(cin, sv.maLop);
+        cout << "Nhập điểm cho sinh viên: ";
+        cin >> sv.diem;
+        cin.ignore();
+        while (!kiemTra(sv.maSinhVien)) {
+            cout << "ERROR: Mã bạn nhập vào đã bị trùng vui lòng nhập lại mã cho sinh viên này: ";
+            getline(cin, sv.maSinhVien);
+        }sv.maSinhVien = chuanHoa(sv.maSinhVien);
+        mangSinhVien.push_back(sv);
+
+
+        Node* newNode = new Node{ sv, nullptr, nullptr };
+        if (!head) {
+            head = newNode;
+        }
+        else {
+            Node* temp = head;
+            while (temp->next)
+                temp = temp->next;
+            temp->next = newNode;
+            newNode->prev = temp;
+        }
+
+        // Cập nhật vào file
+        ofstream fileout("DSSV.csv", ios::app);
+        if (!fileout.is_open()) {
+            cerr << "Không mở file được " << endl;
+            return;
+        }
+        else {
+            fileout << sv.soThuTu << ",";
+            fileout << sv.maSinhVien << ",";
+            fileout << sv.hoLot << ",";
+            fileout << sv.ten << ",";
+            fileout << sv.maLop << ",";
+            fileout << sv.diem << "\n";
+            fileout.close();
+        }
+    }
+  
+
+    void xoaSinhVien()override {
+
+    }// dang do dang
+
+
+   
+
 
 
     ~QuanLiDuLieuDSLKKep() {
@@ -954,15 +1438,15 @@ public:
 };
 
 int main() {
-    QuanLiDuLieu* a = nullptr; 
-    int luaChon = -1; 
+    QuanLiDuLieu* a = nullptr;
+    int luaChon = -1;
 
     do {
         cout << setw(25) << "MENU" << endl;
         cout << "1.Chọn cách thức lưu trữ danh sách trên " << endl;
         cout << "2.Tìm kiếm các sinh viên dựa theo tiêu chí " << endl;
         cout << "3.Thêm mới sinh viên " << endl;
-        cout << "4.Liệt kê " << endl;
+        cout << "4.Xóa sinh viên theo mã " << endl;
         cout << "5.Chọn cách sắp xếp danh sách tăng dần " << endl;
         cout << "0.Thoát " << endl;
         cout << "Nhập lựa chọn của bạn : ";
@@ -970,7 +1454,7 @@ int main() {
 
         switch (luaChon) {
         case 1:
-            int x; // Khởi tạo biến x để lưu trữ cách thức lưu trữ đã chọn
+            int x;
             cout << "Nhập 1: Theo mảng " << endl;
             cout << "Nhập 2: Theo Danh sách liên kết đơn " << endl;
             cout << "Nhập 3: Theo Danh sách liên kết vòng " << endl;
@@ -1038,12 +1522,24 @@ int main() {
             break;
 
         case 3:
-            // Thêm mới sinh viên
-            break;
+            if (a != nullptr) {
+                a->themSinhVien();
+                
+            }
+            else {
+                cout << "Vui lòng chọn cách thức lưu trữ danh sách trước khi tìm kiếm." << endl;
+
+            }break;
 
         case 4:
-            // Liệt kê danh sách
-            break;
+            if (a != nullptr) {
+                a->xoaSinhVien();
+
+            }
+            else {
+                cout << "Vui lòng chọn cách thức lưu trữ danh sách trước khi tìm kiếm." << endl;
+
+            }break;
 
         case 5:
             // Sắp xếp danh sách
@@ -1055,12 +1551,10 @@ int main() {
             cout << "Vui lòng nhập đúng định dạng !" << endl;
             break;
         }
-        
+
     } while (luaChon != 0);
 
     delete a; // Giải phóng bộ nhớ trước khi kết thúc chương trình
 
     return 0;
 }
-
-
